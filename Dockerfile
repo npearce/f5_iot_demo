@@ -8,14 +8,18 @@ FROM alpine:latest
 
 MAINTAINER Nathan Pearce
 
-ENV REPO https://github.com/npearce
-ENV REPO_RAW https://github.com/npearce
+ENV REPO_RAW https://raw.githubusercontent.com/npearce/f5_iot_demo/master
+ENV LOCAL_PATH /f5_iot_demo
 
+https://raw.githubusercontent.com/npearce/f5_iot_demo/master/iot_client.js
 
-# Upgrade the Alpine package system
-RUN apk update && apk upgrade
+# Update the Alpine package database
+RUN apk update
 
 # Install Node.js
 RUN apk add nodejs
 
-ADD $REPO/npearce/f5_iot_demo/
+ADD $REPO_RAW/f5_iot_demo/iot_client_inputs.json .
+ADD $REPO_RAW/f5_iot_demo/iot_client.js .
+
+CMD /usr/bin/node LOCAL_PATH/iot_client.js
