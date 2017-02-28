@@ -1,5 +1,5 @@
 {
-  "WATER_MARK":"0",
-  "SAMPLE_SIZE":"200",
-  "POLL_INPUTS":"100"
+  "water_mark":"0",
+  "sample_size":"200",
+  "poll_inputs":"100"
 }

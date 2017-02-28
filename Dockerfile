@@ -17,7 +17,7 @@ RUN apk update
 # Install Node.js
 RUN apk add nodejs
 
-ADD $REPO_RAW/f5_iot_demo/iot_client_inputs.json .
-ADD $REPO_RAW/f5_iot_demo/iot_client.js .
+ADD $REPO_RAW/iot_client_inputs.json $LOCAL_PATH/
+ADD $REPO_RAW/iot_client.js $LOCAL_PATH/
 
-CMD /usr/bin/node LOCAL_PATH/iot_client.js
+CMD /usr/bin/node $LOCAL_PATH/iot_client.js
