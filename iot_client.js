@@ -56,22 +56,10 @@ function updateInputs() {
 
 
 }
-
-function getDomains() {
-  // implement this...
-}
-
 updateInputs();
 setInterval(updateInputs, 1000);
 
 
-var task_is_running = false;
-
-setInterval(function(){
-    if(!task_is_running){
-        task_is_running = true;
-        do_something(42, function(result){
-            task_is_running = false;
-        });
-    }
-}, time_interval_in_miliseconds);
+function getDomains() {
+  // implement this...
+}
