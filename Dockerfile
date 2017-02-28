@@ -11,8 +11,6 @@ MAINTAINER Nathan Pearce
 ENV REPO_RAW https://raw.githubusercontent.com/npearce/f5_iot_demo/master
 ENV LOCAL_PATH /f5_iot_demo
 
-https://raw.githubusercontent.com/npearce/f5_iot_demo/master/iot_client.js
-
 # Update the Alpine package database
 RUN apk update
 
