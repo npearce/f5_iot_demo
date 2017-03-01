@@ -1,25 +1,19 @@
 // IoT demo client
 var http = require("https");
 
+//var inputs = JSON.parse('{ "inputs.poll_inputs_interval": "1000" }');
+var inputs = JSON.parse('{ "poll_inputs_interval": "1000" }');
+//console.log('JSON.parse - inputs: ' +JSON.stringify(inputs, ' ', '\t'));
 
-var WATER_MARK = 0;  // timestampe of where we are up to
-var SAMPLE_SIZE = 200;
-var POLL_INPUTS_INTERVAL = 10;  //Seconds between retrieving client settings from github.
-var POLL_DOMAINS_INTERVAL = 20;   //Seconds between polling /domains for updates.
-
-if ((WATER_MARK - SAMPLE_SIZE) < SAMPLE_SIZE) {
-  console.log('SAMPLE_SIZE: ' +SAMPLE_SIZE+ ' is greater than SAMPLE_SIZE minus WATER_MARK');
-}
-
+//if ((WATER_MARK - SAMPLE_SIZE) < SAMPLE_SIZE) {
+//  console.log('SAMPLE_SIZE: ' +SAMPLE_SIZE+ ' is greater than SAMPLE_SIZE minus WATER_MARK');
+//}
 
 function poll_inputs (interval) {
   //GET https://raw.githubusercontent.com/npearce/f5_iot_demo/master/iot_client_inputs.json
-
-
 }
 
 function updateInputs() {
-  console.log("updateInputs: " +updateInputs);
 
   var options = {
     "method": "GET",
@@ -40,26 +34,19 @@ function updateInputs() {
 
     res.on("end", function () {
       var body = Buffer.concat(chunks);
-      console.log(body.toString());
+//      console.log(body.toString());
+
+      var inputs = JSON.parse(body);
+      console.log("JSON.stringify(inputs): " +JSON.stringify(inputs, ' ', '\t'));
     });
   });
 
   req.end();
 
-  inputs = JSON.stringify(body);
-
-  WATER_MARK = inputs.water_mark;
-  SAMPLE_SIZE = body.sample_size;
-  POLL_INPUTS = body.poll_inputs;
-
-  console.log("body.water_mark:" +body.water_mark+ " body.sample_size: " +body.sample_size+ " body.poll_inputs: " +body.poll_inputs);
-
-
+  return inputs;
 }
-updateInputs();
-setInterval(updateInputs, 1000);
 
-
-function getDomains() {
-  // implement this...
-}
+console.log("inputs.poll_inputs_interval: " +inputs.poll_inputs_interval);
+//updateInputs();
+setInterval(updateInputs, inputs.poll_inputs_interval);
+// setInterval(getDomains, 1000);
