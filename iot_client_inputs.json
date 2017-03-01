@@ -5,4 +5,4 @@
   "poll_domains_interval": "10",
   "domain_batch_size": "200",
   "alive": "true"
-};
+}
