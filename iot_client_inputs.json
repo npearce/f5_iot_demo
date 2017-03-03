@@ -1,0 +1,8 @@
+{
+  "water_mark": "10",
+  "sample_size": "150",
+  "poll_inputs_interval": "60000",
+  "poll_domains_interval": "10",
+  "domain_batch_size": "200",
+  "alive": "true"
+}
