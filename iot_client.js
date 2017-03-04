@@ -2,7 +2,9 @@
 var http = require("https");
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; //ignore self-signed cert
 
-var count = 1;
+var inputsCount = 1;
+var recordsCount = 1;
+
 var inputs = JSON.parse('{ "poll_inputs_interval": "1000" }');  //setting a poll interval for first run
 
 //if ((WATER_MARK - SAMPLE_SIZE) < SAMPLE_SIZE) {
@@ -42,8 +44,8 @@ function updateInputs() {  //Retreives operational settings from git repo
 
     req.end();
 
-    console.log("count: " +count);
-    count++;
+    console.log("count: " +inputsCount);
+    inputsCount++;
 
   //  console.log("inputs.poll_inputs_interval: " +inputs.poll_inputs_interval);
     setTimeout(updateInputs, inputs.poll_inputs_interval);
@@ -84,10 +86,10 @@ function processRecords() {   //Get the last 'inputs.domain_batch_size' records 
 
     req.end();
 
-    console.log("count: " +count);
-    count++;
+    console.log("processRecords count: " +recordsCount);
+    recordsCount++;
   }
-  setTimeout(processRecords, inputs.poll_inputs_interval);
+  setTimeout(processRecords, inputs.poll_domains_interval);
 }
 function postUpdate(update) {   //POST to the dashboard wWen you are all caught up.
   //POST to Dashboard!
