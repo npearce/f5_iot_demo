@@ -4,6 +4,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; //ignore self-signed cert
 
 var inputsCount = 1;
 var recordsCount = 1;
+var noInputs = 0;
 
 var inputs = JSON.parse('{ "poll_inputs_interval": "1000" }');  //setting a poll interval for first run
 
@@ -13,10 +14,12 @@ var inputs = JSON.parse('{ "poll_inputs_interval": "1000" }');  //setting a poll
 
 function updateInputs() {  //Retreives operational settings from git repo
 
-  if (inputs.alive === false) {
+  if ((inputs.alive === "false") || (inputsCount > "5")) {
+    console.log("Kill triggered. Exiting...");
     process.exit();
   }
   else {
+
     var options = {
       "method": "GET",
       "hostname": "raw.githubusercontent.com",
@@ -44,7 +47,7 @@ function updateInputs() {  //Retreives operational settings from git repo
 
     req.end();
 
-    console.log("count: " +inputsCount);
+    console.log("inputsCount: " +inputsCount);
     inputsCount++;
 
   //  console.log("inputs.poll_inputs_interval: " +inputs.poll_inputs_interval);
@@ -54,7 +57,9 @@ function updateInputs() {  //Retreives operational settings from git repo
 
 function processRecords() {   //Get the last 'inputs.domain_batch_size' records since 'lastUpdateMicros'
   if (!inputs.domain_batch_size) {
-    console.log("getDomains() NO domain_batch_size: " +inputs.domain_batch_size);
+    console.log("Awaiting inputs. No Inputs count: " +noInputs);
+    noInputs++;
+    setTimeout(processRecords, 5000);
   }
   else {
     console.log("getDomains() domain_batch_size: " +inputs.domain_batch_size);
@@ -88,12 +93,12 @@ function processRecords() {   //Get the last 'inputs.domain_batch_size' records 
 
     console.log("processRecords count: " +recordsCount);
     recordsCount++;
+
+    setTimeout(processRecords, inputs.poll_domains_interval);
   }
-  setTimeout(processRecords, inputs.poll_domains_interval);
 }
 function postUpdate(update) {   //POST to the dashboard wWen you are all caught up.
-  //POST to Dashboard!
-  //POST https://10.145.200.47/mgmt/demo/dashboard { “device” : “10.10.10.10” }
+
   var http = require("https");
 
   var options = {
@@ -123,7 +128,6 @@ function postUpdate(update) {   //POST to the dashboard wWen you are all caught 
 
   req.write(JSON.stringify({ device: update }));
   req.end();
-
 
 }
 
