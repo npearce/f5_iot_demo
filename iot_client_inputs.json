@@ -5,5 +5,5 @@
   "domain_batch_size": "20",
   "water_mark": "10",
   "sample_size": "150",
-  "alive": "false"
+  "alive": "true"
 }
