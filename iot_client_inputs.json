@@ -4,7 +4,6 @@
   "poll_inputs_interval": "10000",
   "poll_domains_interval": "5000",
   "domain_batch_size": "20",
-  "poll_domains_interval": "10",
   "poll_domains_backoff_interval": "120000",
   "domain_batch_size": "20",
   "alive": "true"
