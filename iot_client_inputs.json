@@ -3,7 +3,7 @@
   "poll_domains_interval": "100",
   "poll_domains_jitter": "10",
   "poll_domains_backoff_interval": "120000",
-  "domain_batch_size": "20",
+  "domain_batch_size": "200",
   "water_mark": "10",
   "sample_size": "150",
   "alive": "true"
