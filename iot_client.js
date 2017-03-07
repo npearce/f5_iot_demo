@@ -1,3 +1,6 @@
+//TODO: implement backoff threshold once processed all the records.... if (records < poll_records_batch_size) ..
+//TODO: add command line arg for server address
+
 // IoT demo client
 var http = require("https");
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; //ignore self-signed cert
@@ -6,7 +9,7 @@ var recordsCount = 1;
 var noInputs = 0;
 var fromLastUpdateMicros = 0;
 var records = [];
-var DEBUG = true;
+var DEBUG = false;
 var inputs = { "poll_inputs_interval": "1000" };  //setting a poll interval for first run
 
 function updateInputs() {  //Retreives operational settings from git repo
@@ -16,6 +19,8 @@ function updateInputs() {  //Retreives operational settings from git repo
     process.exit();
   }
   else {
+    console.log("Polling inputs...");
+
     var options = {
       "method": "GET",
       "hostname": "raw.githubusercontent.com",
@@ -82,30 +87,47 @@ function processRecords() {   //Collect 'inputs.domain_batch_size' of records un
       res.on("end", function () {
         var body = Buffer.concat(chunks);
         jBody = JSON.parse(body);
-//        console.log("Response - jBody " +JSON.stringify(jBody, ' ', '\t')); // the entire resposne.
-        console.log("lastUpdateMicros of item "+inputs.domain_batch_size+" : " +jBody.items[(inputs.domain_batch_size - 1)].lastUpdateMicros);
 
-        fromLastUpdateMicros = jBody.items[(inputs.domain_batch_size - 1)].lastUpdateMicros;  //Grab the lastUpdateMicros of the last entry.
+        console.log("jBody.items.length: " +jBody.items.length);
 
-        for (var i in jBody.items)  {
-          console.log("jBody.items[i].domainName: " +jBody.items[i].domainName+ " .ipAddress " +jBody.items[i].ipAddress);
-  //        var name = jBody.items[i].domainName;
-  //        var address = jBody.items[i].ipAddress;
-          var record = jBody.items[i].domainName+" "+jBody.items[i].ipAddress;
-          records.push(record);
-          console.log("records[i]: " +records[i]);
+        if (jBody.items.length == "0") {
+          console.log("Records parsed. Posting to Dashboard.");
+          postDashboard('127.0.0.1');
+
+          console.log("Backing off for: " +inputs.poll_domains_backoff_interval);
+          setTimeout(processRecords, inputs.poll_domains_backoff_interval);
+          //implement backoff.
+
         }
-        console.log("all the records: " +JSON.stringify(records, ' ', '\t'));  //dump all the records
+        else {
+          if (DEBUG == true) { console.log("DEBUG: Response - jBody " +JSON.stringify(jBody, ' ', '\t')) }; // the entire resposne.
+          if (DEBUG == true) { console.log("DEBUG: lastUpdateMicros of item "+inputs.domain_batch_size+" : " +jBody.items[(jBody.items.length -1)].lastUpdateMicros) };
+
+//          console.log("lastUpdateMicros of item "+inputs.domain_batch_size+" : " +jBody.items[(jBody.items.length - 1)].lastUpdateMicros);
+
+          fromLastUpdateMicros = jBody.items[(jBody.items.length - 1)].lastUpdateMicros;  //Grab the lastUpdateMicros of the last entry.
+
+          for (var i in jBody.items)  {
+            if (DEBUG == true) { console.log("DEBUG: jBody.items[i].domainName: " +jBody.items[i].domainName+ " .ipAddress " +jBody.items[i].ipAddress) };
+            var record = jBody.items[i].domainName+" "+jBody.items[i].ipAddress;
+            records.push(record);
+          }
+          console.log("Up to: " +jBody.items[(jBody.items.length - 1)].ipAddress);
+        }
+
+        if (jBody.items.length < inputs.domain_batch_size) { console.log("jBody.items.length < inputs.domain_batch_size:" +jBody.items.length+ " < " +inputs.domain_batch_size); }
+        if (DEBUG == true) { console.log("DEBUG: all the records: " +JSON.stringify(records, ' ', '\t')) };  //dump all the records
       });
     });
 
     req.end();
 
   }
+
   setTimeout(processRecords, inputs.poll_domains_interval);
 }
 
-function postUpdate(update) {   //POST to the dashboard wWen you are all caught up.
+function postDashboard(update) {   //POST to the dashboard wWen you are all caught up.
 
   var http = require("https");
 
