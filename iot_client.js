@@ -14,7 +14,8 @@ var processRecordsTimeout;
 var updateInputsTimeout;
 var DEBUG = false;
 var inputs = { "poll_inputs_interval": "1000" };  //setting a poll interval for first run
-
+var iotServer = process.argv[2];
+var maxUpdates = 20;
 
 function updateInputs() {  //Retreives operational settings from git repo
 
@@ -105,14 +106,14 @@ function processRecords() {
         if (DEBUG == true) { console.log("jBody.items.length: " +jBody.items.length); }
 
         if (jBody.items.length == "0") {
-          console.log(records.length+ "records parsed. Posting to Dashboard.");
+          console.log(records.length+ " records parsed.");
           postDashboard();
           fromLastUpdateMicros = "0"; //reset
           writeHosts(records); //write the processed records to the /etc/hosts file
 
           clearTimeout(processRecordsTimeout);
           processRecordsTimeout = setTimeout( function() {
-            console.log("Retrying in " +inputs.poll_domains_backoff_interval+ " milliseconds");
+            console.log("Polling backoff period entered for " +inputs.poll_domains_backoff_interval+ " milliseconds");
             processRecords();
           }, inputs.poll_domains_backoff_interval);
           records = [];
@@ -131,7 +132,7 @@ function processRecords() {
             var record = jBody.items[i].domainName+" "+jBody.items[i].ipAddress;
             records.push(record);
           }
-          console.log("Up to: " +jBody.items[(jBody.items.length - 1)].ipAddress);
+          if (DEBUG == true) { console.log("Up to: " +jBody.items[(jBody.items.length - 1)].ipAddress); }
         }
         if (DEBUG == true) { console.log("DEBUG: all the records: " +JSON.stringify(records, ' ', '\t')) };  //dump all the records
       });
@@ -147,11 +148,11 @@ function postDashboard() {   //POST to the dashboard wWen you are all caught up.
     .map(x => ifs[x].filter(x => x.family === 'IPv4' && !x.internal)[0])
     .filter(x => x)[0].address;
 
-  console.log("clientIp: " +clientIp);
+  console.log("Posting IoT client IP " +clientIp+ " to IoT Server Dashboard at: " +iotServer );
 
   var options = {
     "method": "POST",
-    "hostname": "192.168.202.162",
+    "hostname": iotServer,
     "port": 443,
     "path": "/mgmt/demo/dashboard/",
     "headers": {
@@ -176,10 +177,18 @@ function postDashboard() {   //POST to the dashboard wWen you are all caught up.
 
   req.write(JSON.stringify({ device: clientIp }));
   req.end();
+
+  if (dashUpdates < maxUpdates) {
+    dashUpdates++
+  }
+  else {
+    process.exit();
+  }
+
 }
 
 function writeHosts(hosts) { //write the processed records to the /etc/hosts file
-  console.log("Updating hosts file with " +hosts.length+ " records");
+  console.log("Updating client /etc/hosts file with " +hosts.length+ " records");
   fs.writeFileSync('/etc/hosts', hosts.join('\n'));
 }
 
