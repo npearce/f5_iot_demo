@@ -84,7 +84,7 @@ function processRecords() {
 
     var options = {
       "method": "GET",
-      "hostname": "192.168.202.162",
+      "hostname": iotServer,
       "port": 443,
       "path": "/mgmt/demo/domains-journal?$filter=lastUpdateMicros%20gt%20%27"+fromLastUpdateMicros+"%27&$select=op,ipAddress,domainName,lastUpdateMicros&$top="+inputs.domain_batch_size+"&$orderby=lastUpdateMicros",
       "headers": {
