@@ -1,16 +1,20 @@
-//TODO: implement backoff threshold once processed all the records.... if (records < poll_records_batch_size) ..
+//TODO: dump to /etc/hosts
 //TODO: add command line arg for server address
 
 // IoT demo client
 var http = require("https");
+var fs = require("fs");
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; //ignore self-signed cert
 
 var recordsCount = 1;
 var noInputs = 0;
 var fromLastUpdateMicros = 0;
 var records = [];
+var processRecordsTimeout;
+var updateInputsTimeout;
 var DEBUG = false;
 var inputs = { "poll_inputs_interval": "1000" };  //setting a poll interval for first run
+
 
 function updateInputs() {  //Retreives operational settings from git repo
 
@@ -19,7 +23,6 @@ function updateInputs() {  //Retreives operational settings from git repo
     process.exit();
   }
   else {
-    console.log("Polling inputs...");
 
     var options = {
       "method": "GET",
@@ -48,18 +51,29 @@ function updateInputs() {  //Retreives operational settings from git repo
 
     req.end();
 
-    if (!inputs.domain_batch_size) {
-      if (DEBUG == true) { console.log("Awaiting inputs. No Inputs count: " +noInputs) };
+    if (!inputs.domain_batch_size) {   //Not yet reached the Inputs file.
       noInputs++;
-      setTimeout(updateInputs, 5000);  // Retry iot_client_inputs.json in 5 seconds.
+      updateInputsTimeout = setTimeout( function () {
+        updateInputs();
+      }, 2000);  // Retry iot_client_inputs.json in 2 seconds.
     }
     else {
-      setTimeout(updateInputs, inputs.poll_inputs_interval);
+      updateInputsTimeout = setTimeout( function () {
+        console.log("Checking for run time updates in "+inputs.poll_inputs_interval+" milliseconds....");
+        updateInputs();
+      }, inputs.poll_inputs_interval);  // Retry iot_client_inputs.json in 2 seconds.
     }
   }
 }
 
-function processRecords() {   //Collect 'inputs.domain_batch_size' of records until complete.
+function processRecords() {
+
+  clearTimeout(processRecordsTimeout);
+  processRecordsTimeout = setTimeout( function() {
+    if (DEBUG == true) { console.log("Retrying in " +inputs.poll_domains_interval+ " milliseconds"); }
+    processRecords();
+  }, inputs.poll_domains_interval);
+
   if (inputs.domain_batch_size) {  //If we've acquired the environment settings....
     if (DEBUG == true) {
       console.log("Collecting " +inputs.domain_batch_size+ " records.");
@@ -88,22 +102,26 @@ function processRecords() {   //Collect 'inputs.domain_batch_size' of records un
         var body = Buffer.concat(chunks);
         jBody = JSON.parse(body);
 
-        console.log("jBody.items.length: " +jBody.items.length);
+        if (DEBUG == true) { console.log("jBody.items.length: " +jBody.items.length); }
 
         if (jBody.items.length == "0") {
           console.log("Records parsed. Posting to Dashboard.");
-          postDashboard('127.0.0.1');
+          postDashboard();
+          fromLastUpdateMicros = "0"; //reset
+          writeHosts(records); //write the processed records to the /etc/hosts file
 
-          console.log("Backing off for: " +inputs.poll_domains_backoff_interval);
-          setTimeout(processRecords, inputs.poll_domains_backoff_interval);
-          //implement backoff.
+          clearTimeout(processRecordsTimeout);
+          processRecordsTimeout = setTimeout( function() {
+            console.log("Retrying in " +inputs.poll_domains_backoff_interval+ " milliseconds");
+            processRecords();
+          }, inputs.poll_domains_backoff_interval);
 
         }
         else {
-          if (DEBUG == true) { console.log("DEBUG: Response - jBody " +JSON.stringify(jBody, ' ', '\t')) }; // the entire resposne.
-          if (DEBUG == true) { console.log("DEBUG: lastUpdateMicros of item "+inputs.domain_batch_size+" : " +jBody.items[(jBody.items.length -1)].lastUpdateMicros) };
-
-//          console.log("lastUpdateMicros of item "+inputs.domain_batch_size+" : " +jBody.items[(jBody.items.length - 1)].lastUpdateMicros);
+          if (DEBUG == true) {
+            console.log("DEBUG: Response - jBody " +JSON.stringify(jBody, ' ', '\t')); // the entire resposne.
+            console.log("DEBUG: lastUpdateMicros of item "+inputs.domain_batch_size+" : " +jBody.items[(jBody.items.length -1)].lastUpdateMicros);
+          }
 
           fromLastUpdateMicros = jBody.items[(jBody.items.length - 1)].lastUpdateMicros;  //Grab the lastUpdateMicros of the last entry.
 
@@ -114,22 +132,21 @@ function processRecords() {   //Collect 'inputs.domain_batch_size' of records un
           }
           console.log("Up to: " +jBody.items[(jBody.items.length - 1)].ipAddress);
         }
-
-        if (jBody.items.length < inputs.domain_batch_size) { console.log("jBody.items.length < inputs.domain_batch_size:" +jBody.items.length+ " < " +inputs.domain_batch_size); }
         if (DEBUG == true) { console.log("DEBUG: all the records: " +JSON.stringify(records, ' ', '\t')) };  //dump all the records
       });
     });
-
     req.end();
-
   }
-
-  setTimeout(processRecords, inputs.poll_domains_interval);
 }
 
-function postDashboard(update) {   //POST to the dashboard wWen you are all caught up.
+function postDashboard() {   //POST to the dashboard wWen you are all caught up.
 
-  var http = require("https");
+  var ifs = require('os').networkInterfaces();
+  var clientIp = Object.keys(ifs)
+    .map(x => ifs[x].filter(x => x.family === 'IPv4' && !x.internal)[0])
+    .filter(x => x)[0].address;
+
+  console.log("clientIp: " +clientIp);
 
   var options = {
     "method": "POST",
@@ -152,13 +169,17 @@ function postDashboard(update) {   //POST to the dashboard wWen you are all caug
 
     res.on("end", function () {
       var body = Buffer.concat(chunks);
-      console.log('postUpdate: ' +body.toString());
+//      console.log('postUpdate: ' +body.toString());
     });
   });
 
-  req.write(JSON.stringify({ device: update }));
+  req.write(JSON.stringify({ device: clientIp }));
   req.end();
+}
 
+function writeHosts(hosts) { //write the processed records to the /etc/hosts file
+  console.log("Updating hosts file with " +hosts.length+ " records");
+  fs.writeFileSync('/etc/hosts', hosts.join('\n'));
 }
 
 updateInputs();
