@@ -16,6 +16,7 @@ var DEBUG = false;
 var inputs = { "poll_inputs_interval": "1000" };  //setting a poll interval for first run
 var iotServer = process.argv[2];
 var maxUpdates = 20;
+var dashUpdates = 0;
 
 function updateInputs() {  //Retreives operational settings from git repo
 
