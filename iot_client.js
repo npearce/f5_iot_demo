@@ -105,7 +105,7 @@ function processRecords() {
         if (DEBUG == true) { console.log("jBody.items.length: " +jBody.items.length); }
 
         if (jBody.items.length == "0") {
-          console.log("Records parsed. Posting to Dashboard.");
+          console.log(records.length+ "records parsed. Posting to Dashboard.");
           postDashboard();
           fromLastUpdateMicros = "0"; //reset
           writeHosts(records); //write the processed records to the /etc/hosts file
@@ -115,6 +115,7 @@ function processRecords() {
             console.log("Retrying in " +inputs.poll_domains_backoff_interval+ " milliseconds");
             processRecords();
           }, inputs.poll_domains_backoff_interval);
+          records = [];
 
         }
         else {
