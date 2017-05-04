@@ -89,7 +89,8 @@ function processRecords() {
       "path": "/mgmt/demo/domains-journal?$filter=lastUpdateMicros%20gt%20%27"+fromLastUpdateMicros+"%27&$select=op,ipAddress,domainName,lastUpdateMicros&$top="+inputs.domain_batch_size+"&$orderby=lastUpdateMicros",
       "headers": {
         "authorization": "Basic YWRtaW46YWRtaW4=",
-        "cache-control": "no-cache"
+        "cache-control": "no-cache",
+        "connection": "keep-alive"
       }
     };
 
