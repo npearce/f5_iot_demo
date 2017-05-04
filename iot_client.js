@@ -160,7 +160,8 @@ function postDashboard() {   //POST to the dashboard wWen you are all caught up.
     "headers": {
       "content-type": "application/json",
       "authorization": "Basic YWRtaW46YWRtaW4=",
-      "cache-control": "no-cache"
+      "cache-control": "no-cache",
+      "connection": "keep-alive"
     }
   };
 
