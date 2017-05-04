@@ -5,6 +5,7 @@
 var http = require("https");
 var fs = require("fs");
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; //ignore self-signed cert
+http.globalAgent.keepAlive = true; //enable session keep-alive
 
 var recordsCount = 1;
 var noInputs = 0;
