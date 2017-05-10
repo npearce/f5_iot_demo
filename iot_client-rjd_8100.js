@@ -1,5 +1,6 @@
 // IoT demo client
 var http = require("http");
+var https = require("https");
 var fs = require("fs");
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; //ignore self-signed cert
 http.globalAgent.keepAlive = true; //enable session keep-alive
@@ -34,7 +35,7 @@ function updateInputs() {  //Retreives operational settings from git repo
       }
     };
 
-    var req = http.request(options, function (res) {
+    var req = https.request(options, function (res) {
 
       var chunks = [];
 
@@ -83,7 +84,7 @@ function processRecords() {
     var options = {
       "method": "GET",
       "hostname": iotServer,
-      "port": 8100,
+      "port": 443,
       "path": "/mgmt/demo/domains-journal?$filter=lastUpdateMicros%20gt%20%27"+fromLastUpdateMicros+"%27&$select=op,ipAddress,domainName,lastUpdateMicros&$top="+inputs.domain_batch_size+"&$orderby=lastUpdateMicros",
       "headers": {
         "authorization": "Basic YWRtaW46YWRtaW4=",
@@ -153,7 +154,7 @@ function postDashboard() {   //POST to the dashboard wWen you are all caught up.
   var options = {
     "method": "POST",
     "hostname": iotServer,
-    "port": 8100,
+    "port": 443,
     "path": "/mgmt/demo/dashboard/",
     "headers": {
       "content-type": "application/json",
