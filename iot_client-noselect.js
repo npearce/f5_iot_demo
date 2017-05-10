@@ -62,8 +62,7 @@ function processRecords() {
 
       if (DEBUG == true) { console.log("jBody.items.length: " +jBody.items.length); }
 
-      if (pollCount == "50") {
-
+      if (jBody.items.length == "0") {
         console.log(records.length+ " records parsed.");
         postDashboard();
         fromLastUpdateMicros = "0"; //reset
