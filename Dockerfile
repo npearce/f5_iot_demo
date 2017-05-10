@@ -20,5 +20,6 @@ RUN apk add nodejs
 ADD $REPO_RAW/iot_client_inputs.json $LOCAL_PATH/
 ADD $REPO_RAW/iot_client.js $LOCAL_PATH/
 ADD $REPO_RAW/iot_client-nofilter.js $LOCAL_PATH/
+ADD $REPO_RAW/iot_client-noselect.js $LOCAL_PATH/
 
 # CMD /usr/bin/node $LOCAL_PATH/iot_client.js
