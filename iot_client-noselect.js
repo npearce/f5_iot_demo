@@ -62,12 +62,7 @@ function processRecords() {
 
       if (DEBUG == true) { console.log("jBody.items.length: " +jBody.items.length); }
 
-      var mod = maxUpdates % pollCount;
-      console.log("maxUpdates: " +maxUpdates);
-      console.log("pollCount: " +pollCount);
-      console.log("mod: " +mod);
-
-      if (mod == "0") {
+      if (pollCount == "50") {
 
         console.log(records.length+ " records parsed.");
         postDashboard();
@@ -80,6 +75,7 @@ function processRecords() {
           processRecords();
         }, inputs.poll_domains_backoff_interval);
         records = [];
+        pollCount = 0;
 
       }
       else {
@@ -96,12 +92,12 @@ function processRecords() {
           records.push(record);
         }
         if (DEBUG == true) { console.log("Up to: " +jBody.items[(jBody.items.length - 1)].ipAddress); }
+        pollCount++;
       }
 //      if (DEBUG == true) { console.log("DEBUG: all the records: " +JSON.stringify(records, ' ', '\t')) };  //dump all the records
     });
   });
   req.end();
-  pollCount++;
 }
 
 function postDashboard() {   //POST to the dashboard wWen you are all caught up.

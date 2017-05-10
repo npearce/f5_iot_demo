@@ -40,7 +40,7 @@ function processRecords() {
     "hostname": iotServer,
     "port": 443,
 //      "path": "/mgmt/demo/domains-journal?$filter=lastUpdateMicros%20gt%20%27"+fromLastUpdateMicros+"%27&$select=op,ipAddress,domainName,lastUpdateMicros&$top="+inputs.domain_batch_size+"&$orderby=lastUpdateMicros",
-    "path": "/mgmt/demo/domains-journal?$select=op,ipAddress,domainName,lastUpdateMicros&$top=200",
+    "path": "/mgmt/demo/domains-journal?$select=op,ipAddress,domainName,lastUpdateMicros&$top=200&$orderby=lastUpdateMicros",
     "headers": {
       "authorization": "Basic YWRtaW46YWRtaW4=",
       "cache-control": "no-cache",
@@ -61,14 +61,8 @@ function processRecords() {
 
       if (DEBUG == true) { console.log("jBody.items.length: " +jBody.items.length); }
 
-      var mod = maxUpdates % pollCount;
-      console.log("maxUpdates: " +maxUpdates);
-      console.log("pollCount: " +pollCount);
-      console.log("mod: " +mod);
+      if (pollCount == "50") {
 
-//        if (jBody.items.length == "0") {
-      if (mod == "0") {
-        console.log("Divide by 5: " +mod);
         console.log(records.length+ " records parsed.");
         postDashboard();
         fromLastUpdateMicros = "0"; //reset
@@ -80,6 +74,7 @@ function processRecords() {
           processRecords();
         }, inputs.poll_domains_backoff_interval);
         records = [];
+        pollCount = 0;
 
       }
       else {
@@ -96,12 +91,12 @@ function processRecords() {
           records.push(record);
         }
         if (DEBUG == true) { console.log("Up to: " +jBody.items[(jBody.items.length - 1)].ipAddress); }
+        pollCount++;
       }
 //      if (DEBUG == true) { console.log("DEBUG: all the records: " +JSON.stringify(records, ' ', '\t')) };  //dump all the records
     });
   });
   req.end();
-  pollCount++;
 }
 
 function postDashboard() {   //POST to the dashboard wWen you are all caught up.
