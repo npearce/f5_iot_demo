@@ -1,6 +1,3 @@
-//TODO: dump to /etc/hosts
-//TODO: add command line arg for server address
-
 // IoT demo client
 var http = require("https");
 var fs = require("fs");
